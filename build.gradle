@@ -13,7 +13,7 @@ apply plugin: 'idea'
 apply plugin: 'spring-boot'
 apply plugin: 'docker'
 
-group = 'riddick.cn'
+group = 'registry.riddick.cn'
 
 jar {
     baseName = 'asms-api-export'
