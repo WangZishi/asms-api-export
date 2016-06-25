@@ -9,11 +9,11 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -21,51 +21,21 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * Created by TianJ on 2016/4/19.
+ * Created by TianJ on 2016/6/15.
  */
 @RestController
-@RequestMapping(value = "/discuss")
-public class discussController {
-    @Autowired
-    JdbcTemplate jdbcTemplate;
+@RequestMapping(value = "/admission")
+public class admissionController {
     @Autowired
     private ExportService exportService;
     /**
-     * 测试导出6万条
-     * GET
-     * Accept: application/octet-stream
-     */
-    @RequestMapping(value = "/test",
-            method = RequestMethod.GET,
-            headers = "Accept=application/octet-stream")
-    public ResponseEntity<byte[]> exportTest() throws IOException {
-//        List<String> list = jdbcTemplate.queryForList("select id from ASMS.TEST_EXPORT_60000 where id='1ftgtg6459'",String.class);
-        byte[] bytes = null;
-        String tableName = "TEST_EXPORT_60000";
-        String[] ids = {"zftjtl6999","iqtjtl6999"};
-        //打印设置
-        PrintConfig printConfig = new PrintConfig();
-        printConfig.LANDSCAPE = true; // 打印方向，true：横向，false：纵向
-        printConfig.PAPERSIZE = HSSFPrintSetup.A3_PAPERSIZE;
-        printConfig.SCALE = (short) 90;
-        bytes = exportService.exportByFilter(tableName, "0", ids,printConfig);
-        Timestamp ts = new Timestamp(System.currentTimeMillis());
-        String fileName = ts.getTime() + ".xls"; // 组装附件名称和格式
-
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        httpHeaders.setContentDispositionFormData("attachment", fileName);
-
-        return new ResponseEntity<byte[]>(bytes, httpHeaders, HttpStatus.CREATED);
-    }
-    /**
-     * 导出新生登记表
+     * 导出新生录取名单
      * Post
      */
     @RequestMapping(
             method = RequestMethod.POST,
             headers = "Content-Type=application/x-www-form-urlencoded")
-    public ResponseEntity<byte[]> exportDiscuss(@RequestBody String str) throws IOException {
+    public ResponseEntity<byte[]> exportAdmission(@RequestBody String str) throws IOException {
         String cscIdsStr = java.net.URLDecoder.decode(str, "UTF-8");
         cscIdsStr = cscIdsStr.substring(7);
         ArrayList content = new ObjectMapper().readValue(cscIdsStr,ArrayList.class);
@@ -78,11 +48,11 @@ public class discussController {
             HashMap c = (HashMap) content.get(i);
             Integer year = Integer.parseInt(c.get("year").toString());
             Integer nextYear = year+1;
-            String title = year + "~" + nextYear + "学年度" + c.get("dispatch") + "-" + c.get("projectname") + "新生情况登记表";
+            String title = year + "~" + nextYear + "学年度" + c.get("dispatch") + "-" + c.get("projectname") + "新生录取名单";
             titles[i] = title;
             String sheetTitle = year + "" + c.get("dispatch") + "-" + c.get("projectname");
             sheetTitles[i] = sheetTitle;
-            tableNames[i] = "asms.v_exp_discuss_hb";
+            tableNames[i] = "asms.v_stu_lqmd";
             List cscIds = (List)c.get("cscIds");
             idsList.add(cscIds);
             String subTitle = c.get("dispatch") + "-" + c.get("projectname");
@@ -92,7 +62,7 @@ public class discussController {
         //打印设置
         PrintConfig printConfig = new PrintConfig();
         printConfig.LANDSCAPE = true; // 打印方向，true：横向，false：纵向
-        printConfig.PAPERSIZE = HSSFPrintSetup.A3_PAPERSIZE;
+        printConfig.PAPERSIZE = HSSFPrintSetup.A4_PAPERSIZE;
         printConfig.SCALE = (short) 90;
 
         bytes = exportService.exportByFilter(tableNames, "0", idsList,titles,sheetTitles,Row2Col2s,printConfig);

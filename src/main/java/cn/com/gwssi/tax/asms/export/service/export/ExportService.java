@@ -1,6 +1,7 @@
 package cn.com.gwssi.tax.asms.export.service.export;
 
 import cn.com.gwssi.tax.asms.export.dao.export.ExportDAO;
+import cn.com.gwssi.tax.asms.export.domain.PrintConfig;
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,7 +18,7 @@ public class ExportService
     @Autowired
     private ExportDAO           exportDAO;
 
-    public byte[] exportByFilter(String tableName, String subTable, String[] ids)
+    public byte[] exportByFilter(String tableName, String subTable, String[] ids, PrintConfig printConfig)
     {
         ids = ids == null ? new String[0] : ids;
         List<List<String>> idsList = splitList(Arrays.asList(ids));
@@ -55,42 +56,58 @@ public class ExportService
         String hjh[] = null;// {"合计","3","5","6","7","8","9","10"};
 
         //导出excel
-        byte[] bytes = getExcelBytes(headArray, titleExcel, columnLength, mergeArray, recordList, hjh);
+        byte[] bytes = getExcelBytes(headArray, titleExcel, columnLength, mergeArray, recordList, hjh, printConfig);
 
         return bytes;
     }
 
-    //生成多个sheet页的导出
-    public byte[] exportByFilter(String[] tableNames, String subTable, String[] ids)
+    //生成多个sheet页的导出---表头值动态，需传入（导出新生登记表，导出新生录取名单，导出分配名单）
+    public byte[] exportByFilter(String[] tableNames, String subTable, List<List<String>> idsLists, String[] titles, String[] sheetTitles, String[] Row2Col2s, PrintConfig printConfig)
     {
-        ids = ids == null ? new String[0] : ids;
-        List<List<String>> idsList = splitList(Arrays.asList(ids));
+//        ids = ids == null ? new String[0] : ids;
+//        List<List<String>> idsList = splitList(Arrays.asList(ids));
 
         //定义传入参数数组
         ArrayList<String[][]> headArrays    = new ArrayList<String[][]>();
         ArrayList<String> titleExcels   = new ArrayList<String>();
+        ArrayList<String> titleSheets   = new ArrayList<String>();
         ArrayList<int[]> columnLengths = new ArrayList<int[]>();
         ArrayList<int[][]> mergeArrays   = new ArrayList<int[][]>();
         ArrayList<List<String[]>> recordLists   = new ArrayList<List<String[]>>();
 
-        for (String tableName : tableNames)
+        for (int i=0;i<tableNames.length;i++)
         {
-            List exportList;
+            String tableName = tableNames[i];
+            List<List<String>> idsList = splitList(idsLists.get(i));
+//            List exportList;
             List seachList;//除标题行外
             List headarrayList;//所有标题行
             List mergeList;//需要合并的标题
             int  headArrayCount;//动态标题行数
 
-            exportList = exportDAO.getExportList(tableName, subTable);
+//            exportList = exportDAO.getExportList(tableName, subTable);
             seachList = exportDAO.getSeachList(tableName, subTable);
+
             headarrayList = exportDAO.getHeadarrayList(tableName, subTable);
+            HashMap map0 = (HashMap) headarrayList.get(0);
+            map0.put("COLCH",Row2Col2s[i]);
+            for(int j=1;j<headarrayList.size();j++){
+                HashMap mapj = (HashMap) headarrayList.get(j);
+                if(mapj.get("MERGECOLUMN")!= null){
+                    Calendar calendar = Calendar.getInstance();
+                    int year = calendar.get(Calendar.YEAR);
+                    int month = calendar.get(Calendar.MONTH) + 1;
+                    int day = calendar.get(Calendar.DAY_OF_MONTH);
+                    mapj.put("COLCH","制表日期:"+year+"."+month+"."+day+"\r\n"+"制表单位：国家留学基金管理委员会来华事务部");
+                }
+            }
             mergeList = exportDAO.getMergeList(tableName, subTable);
             headArrayCount = exportDAO.getHeadarrayInt(tableName, subTable);
 
             String sql          = "select ";//查询语句
             String[][] headArray    = new String[headArrayCount][seachList.size()];//需要显示的标题行
             String[][] headArray1   = new String[1][seachList.size()];//查询的字段，英文，和数据库对应
-            String titleExcel   = "";//excel标题
+//            String titleExcel   = "";//excel标题
             int[]      columnLength = new int[seachList.size()];//字段显示宽度
             int[][]    mergeArray;
             if (mergeList.size() > 0)
@@ -102,7 +119,9 @@ public class ExportService
                 mergeArray = null;
             }
             mergeHeader(seachList, headarrayList, mergeList, headArrayCount, headArray, mergeArray, mergeArrays);
-            titleExcels.add(getTitle(exportList));
+//            titleExcels.add(getTitle(exportList));
+            titleExcels.add(titles[i]);
+            titleSheets.add(sheetTitles[i]);
 
             sql = getSql(seachList, sql, tableName, headArrayCount, headArray, headArray1, columnLength);
             headArrays.add(headArray);
@@ -114,7 +133,7 @@ public class ExportService
 
 
         //导出excel
-        byte[] bytes = getExcelBytes(headArrays, titleExcels, columnLengths, mergeArrays, recordLists, hjh);
+        byte[] bytes = getExcelBytes(headArrays, titleExcels, titleSheets, columnLengths, mergeArrays, recordLists, hjh, printConfig);
 
         return bytes;
     }
@@ -223,24 +242,26 @@ public class ExportService
         return recordList;
     }
 
-    private byte[] getExcelBytes(String[][] headArray, String titleExcel, int[] columnLength, int[][] mergeArray, List<String[]> recordList, String[] hjh)
+    private byte[] getExcelBytes(String[][] headArray, String titleExcel, int[] columnLength, int[][] mergeArray, List<String[]> recordList, String[] hjh, PrintConfig printConfig)
     {
         ArrayList<String[][]> headArrays    = new ArrayList<String[][]>();
         ArrayList<String> titleExcels   = new ArrayList<String>();
+        ArrayList<String> titleSheets   = new ArrayList<String>();
         ArrayList<int[]> columnLengths = new ArrayList<int[]>();
         ArrayList<int[][]> mergeArrays   = new ArrayList<int[][]>();
         ArrayList<List<String[]>> recordLists   = new ArrayList<List<String[]>>();
 
         headArrays.add(headArray);
         titleExcels.add(titleExcel);
+        titleSheets.add(titleExcel);
         columnLengths.add(columnLength);
         mergeArrays.add(mergeArray);
         recordLists.add(recordList);
 
-        return getExcelBytes(headArrays, titleExcels, columnLengths, mergeArrays, recordLists, hjh);
+        return getExcelBytes(headArrays, titleExcels, titleSheets, columnLengths, mergeArrays, recordLists, hjh, printConfig);
     }
 
-    private byte[] getExcelBytes(ArrayList headArrays, ArrayList titleExcels, ArrayList columnLengths, ArrayList mergeArrays, ArrayList recordLists, String[] hjh)
+    private byte[] getExcelBytes(ArrayList headArrays, ArrayList titleExcels, ArrayList titleSheets, ArrayList columnLengths, ArrayList mergeArrays, ArrayList recordLists, String[] hjh, PrintConfig printConfig)
     {
         ExcelExportUtil es = new ExcelExportUtil();
         short[] excelAlignArray = {HSSFCellStyle.ALIGN_RIGHT, HSSFCellStyle.ALIGN_RIGHT,
@@ -254,7 +275,7 @@ public class ExportService
         byte[] bytes           = new byte[0];
         try
         {
-            String filePath = es.writeExcel(titleExcels, recordLists, hjh, headArrays, mergeArrays, columnLengths, excelAlignArray, dir, dirTmp, maxRecordAmount);
+            String filePath = es.writeExcel(titleExcels, titleSheets, recordLists, hjh, headArrays, mergeArrays, columnLengths, excelAlignArray, dir, dirTmp, maxRecordAmount, printConfig);
             FileInputStream in       = new FileInputStream(filePath);
             int             size     = in.available();
             bytes = new byte[size];

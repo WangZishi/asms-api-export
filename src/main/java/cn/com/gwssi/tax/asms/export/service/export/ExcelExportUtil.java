@@ -1,5 +1,6 @@
 package cn.com.gwssi.tax.asms.export.service.export;
 
+import cn.com.gwssi.tax.asms.export.domain.PrintConfig;
 import org.apache.poi.hssf.usermodel.*;
 import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.hssf.util.Region;
@@ -133,12 +134,12 @@ public class ExcelExportUtil {
         return dir;
     }
 //   生成多个sheet页
-    public String writeExcel(ArrayList titles, ArrayList recordLists, String[] hjh, ArrayList headArrays,
+    public String writeExcel(ArrayList titles, ArrayList titleSheets, ArrayList recordLists, String[] hjh, ArrayList headArrays,
                              ArrayList mergeArrays, ArrayList columnLengths, short[] alginArray, String dir,
-                             String dirTmp, int maxJlsl) throws Exception {
+                             String dirTmp, int maxJlsl, PrintConfig printConfig) throws Exception {
             //生成Wb
             HSSFWorkbook wb = new HSSFWorkbook();
-            wb = this.createDynamicWb(wb, titles, headArrays.size(), recordLists, hjh, headArrays, mergeArrays, columnLengths, alginArray);
+            wb = this.createDynamicWb(wb, titles, titleSheets,headArrays.size(), recordLists, hjh, headArrays, mergeArrays, columnLengths, alginArray, printConfig);
             dir = this.writeFile(wb, dir);
             return dir;
     }
@@ -157,8 +158,8 @@ public class ExcelExportUtil {
      * @since 1.0
      */
     @SuppressWarnings({"deprecation"})
-    private HSSFWorkbook createDynamicWb(HSSFWorkbook wb, ArrayList titles, int sheetNum, ArrayList recordLists,
-                                         String[] hjh, ArrayList headArrays, ArrayList mergeArrays, ArrayList columnLengths, short[] alginArray) {
+    private HSSFWorkbook createDynamicWb(HSSFWorkbook wb, ArrayList titles, ArrayList titleSheets, int sheetNum, ArrayList recordLists,
+                                         String[] hjh, ArrayList headArrays, ArrayList mergeArrays, ArrayList columnLengths, short[] alginArray, PrintConfig printConfig) {
        //样式
         //普通样式
         HSSFCellStyle style = wb.createCellStyle();
@@ -230,15 +231,18 @@ public class ExcelExportUtil {
             //写标题
             cs1 = header_Style;
             if(!titles.get(i).equals("")){
-                sheet = wb.createSheet((titles.get(i).toString()));//给sheet页命名,title名作为sheet页名
+                sheet = wb.createSheet((titleSheets.get(i).toString()));//给sheet页命名,title名作为sheet页名
             }else{
                 sheet = wb.createSheet(String.valueOf(i));
             }
             sheet.setMargin(HSSFSheet.RightMargin, (double) 0.5);
             HSSFPrintSetup ps = sheet.getPrintSetup();
-            ps.setLandscape(false); // 打印方向，true：横向，false：纵向
-            ps.setPaperSize(HSSFPrintSetup.A4_PAPERSIZE); //纸张
-            ps.setScale((short) 90);
+//            ps.setLandscape(true); // 打印方向，true：横向，false：纵向
+//            ps.setPaperSize(HSSFPrintSetup.A3_PAPERSIZE); //纸张
+//            ps.setScale((short) 90);
+            ps.setLandscape(printConfig.LANDSCAPE); // 打印方向，true：横向，false：纵向
+            ps.setPaperSize(printConfig.PAPERSIZE); //纸张
+            ps.setScale(printConfig.SCALE);
             for (int j = 0; j < headColumnNum; j++) {
                sheet.setColumnWidth((short) j, (short) ((int[])columnLengths.get(i))[j]);
             }
@@ -262,14 +266,16 @@ public class ExcelExportUtil {
             cs2.setFont(fontc);
             cs2.setAlignment(ALIGN_RIGHT);
             cs2.setFillBackgroundColor((short) 12);
+            cs2.setWrapText(true);
             for (int i1 = 0; i1 < headRowNum; i1++) {
                 row = sheet.createRow(currRowNum);
-                row.setHeight((short) 400);
+//                row.setHeight((short) 400);
                 for (int j1 = 0; j1 < headColumnNum; j1++) {
                     cell = row.createCell((short) j1);
                     // cell.setEncoding(Encoding);
                     cell.setCellStyle(cs2);
-                    cell.setCellValue(String.valueOf(((String[][])headArrays.get(i))[i1][j1]));
+                    String value = String.valueOf(((String[][])headArrays.get(i))[i1][j1]);
+                    cell.setCellValue(value.replaceAll("&","\r\n"));
                 }
                 //行号每次自增1
                 currRowNum++;
@@ -292,6 +298,7 @@ public class ExcelExportUtil {
                 HSSFFont font1 = wb.createFont();
                 font1.setFontHeightInPoints((short) 11);
                 cs3.setFont(font1);
+                cs3.setWrapText(true);
 
                 for (int i1 = 0; i1 < ((ArrayList) recordLists.get(i)).size(); i1++) {
                     row = sheet.createRow(currRowNum);
@@ -309,7 +316,8 @@ public class ExcelExportUtil {
                         }
 
                         cell.setCellStyle(cs3);
-                        cell.setCellValue(records[k]);
+                        String value = records[k];
+                        cell.setCellValue(value.replaceAll("&","\r\n"));
                     }
                     currRowNum++;
                 }
