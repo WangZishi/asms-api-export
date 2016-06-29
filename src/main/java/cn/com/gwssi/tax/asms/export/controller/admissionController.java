@@ -24,7 +24,7 @@ import java.util.List;
  * Created by TianJ on 2016/6/15.
  */
 @RestController
-@RequestMapping(value = "/admission")
+@RequestMapping(value = "/api/v2/excel/admission")
 public class admissionController {
     @Autowired
     private ExportService exportService;

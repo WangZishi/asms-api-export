@@ -24,7 +24,7 @@ import java.util.List;
  * Created by TianJ on 2016/4/19.
  */
 @RestController
-@RequestMapping(value = "/discuss")
+@RequestMapping(value = "/api/v2/excel/discuss")
 public class discussController {
     @Autowired
     JdbcTemplate jdbcTemplate;
