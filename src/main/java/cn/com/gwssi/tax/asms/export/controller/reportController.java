@@ -25,7 +25,7 @@ import java.util.Map;
  * Created by TianJ on 2016/6/29.
  */
 @RestController
-@RequestMapping(value = "/report")
+@RequestMapping(value = "/api/v2/excel/report")
 public class reportController {
     @Autowired
     private ExportService exportService;
