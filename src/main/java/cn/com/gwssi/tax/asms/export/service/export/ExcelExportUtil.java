@@ -552,7 +552,7 @@ public class ExcelExportUtil {
      * @throws IOException
      * @since 1.0
      */
-    private String writeFile(HSSFWorkbook wb, String dir) throws InterruptedException, IOException {
+    public String writeFile(HSSFWorkbook wb, String dir) throws InterruptedException, IOException {
         FileOutputStream fileOut = null;
         try {
             //延迟30ms防止文件重名

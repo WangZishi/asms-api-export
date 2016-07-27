@@ -25,7 +25,7 @@ public class Print201Service {
             HSSFRow row3 = sheet.getRow(3);
             HSSFCell school = row3.getCell(18);
             school.setCellValue(String.valueOf(application.get("school")));
-            sheet.getRow(5).getCell(3).setCellValue(String.valueOf(application.get("fullname")));
+            sheet.getRow(5).getCell(2).setCellValue(String.valueOf(application.get("fullname")));
             sheet.getRow(5).getCell(10).setCellValue(String.valueOf(application.get("lastname")));
             sheet.getRow(5).getCell(21).setCellValue(String.valueOf(application.get("firstname")));
 
@@ -50,14 +50,14 @@ public class Print201Service {
             sheet.getRow(15).getCell(18).setCellValue(String.valueOf(application.get("emploer")));
 
             sheet.getRow(16).getCell(24).setCellValue(String.valueOf(application.get("studyFrom_year")));
-            sheet.getRow(16).getCell(29).setCellValue(String.valueOf(application.get("studyFrom_month")));
+            sheet.getRow(16).getCell(26).setCellValue(String.valueOf(application.get("studyFrom_month")));
             sheet.getRow(16).getCell(31).setCellValue(String.valueOf(application.get("studyTo_year")));
             sheet.getRow(16).getCell(34).setCellValue(String.valueOf(application.get("studyTo_month")));
 
             sheet.getRow(17).getCell(1).setCellValue(String.valueOf(application.get("major")));
 
             sheet.getRow(18).getCell(24).setCellValue(String.valueOf(application.get("elementaryFrom_year")));
-            sheet.getRow(18).getCell(29).setCellValue(String.valueOf(application.get("elementaryFrom_month")));
+            sheet.getRow(18).getCell(26).setCellValue(String.valueOf(application.get("elementaryFrom_month")));
             sheet.getRow(18).getCell(31).setCellValue(String.valueOf(application.get("elementaryTo_year")));
             sheet.getRow(18).getCell(34).setCellValue(String.valueOf(application.get("elementaryTo_month")));
 
@@ -66,16 +66,16 @@ public class Print201Service {
             sheet.getRow(21).getCell(1).setCellValue(String.valueOf(application.get("studentKind")));
             sheet.getRow(21).getCell(11).setCellValue(String.valueOf(application.get("cscId")));
             sheet.getRow(21).getCell(21).setCellValue(String.valueOf(application.get("registerDeadline_year")));
-            sheet.getRow(21).getCell(26).setCellValue(String.valueOf(application.get("registerDeadline_month")));
+            sheet.getRow(21).getCell(25).setCellValue(String.valueOf(application.get("registerDeadline_month")));
             sheet.getRow(21).getCell(30).setCellValue(String.valueOf(application.get("registerDeadline_day")));
 
             sheet.getRow(23).getCell(23).setCellValue(String.valueOf(application.get("scholarship")));
 
             sheet.getRow(24).getCell(16).setCellValue(String.valueOf(application.get("tuition")));
-            sheet.getRow(24).getCell(19).setCellValue(String.valueOf(application.get("lodging")));
-            sheet.getRow(24).getCell(27).setCellValue(String.valueOf(application.get("medical")));
+            sheet.getRow(24).getCell(23).setCellValue(String.valueOf(application.get("lodging")));
+            sheet.getRow(24).getCell(34).setCellValue(String.valueOf(application.get("medical")));
 
-            sheet.getRow(25).getCell(23).setCellValue(String.valueOf(application.get("material")));
+            sheet.getRow(25).getCell(24).setCellValue(String.valueOf(application.get("material")));
 
             sheet.getRow(26).getCell(12).setCellValue(String.valueOf(application.get("other")));
             String dir = "./exports/excel/";
