@@ -75,4 +75,38 @@ public class admissionController {
 
         return new ResponseEntity<byte[]>(bytes, httpHeaders, HttpStatus.CREATED);
     }
+
+    /**
+     * 导出录取结果统计
+     * Post
+     */
+    @RequestMapping(
+            value = "/results",
+            method = RequestMethod.POST,
+            headers = "Content-Type=application/x-www-form-urlencoded")
+    public ResponseEntity<byte[]> exportAdmissionResults(@RequestBody String str) throws IOException {
+        String namesStr = java.net.URLDecoder.decode(str, "UTF-8");
+        namesStr = namesStr.substring(7,namesStr.length()-1);
+        String[] temp = namesStr.split(",");
+        String[] names = new String[temp.length];
+        for(int i=0;i<temp.length;i++){
+            names[i] = temp[i].substring(1,temp[i].length()-1);
+        }
+        byte[] bytes;
+        //打印设置
+        PrintConfig printConfig = new PrintConfig();
+        printConfig.LANDSCAPE = true; // 打印方向，true：横向，false：纵向
+        printConfig.PAPERSIZE = HSSFPrintSetup.A4_PAPERSIZE;
+        printConfig.SCALE = (short) 90;
+
+        bytes = exportService.exportByFilter("asms.v_exp_admission_result", "0",names,printConfig);
+        Timestamp ts = new Timestamp(System.currentTimeMillis());
+        String fileName = ts.getTime() + ".xls"; // 组装附件名称和格式
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        httpHeaders.setContentDispositionFormData("attachment", fileName);
+
+        return new ResponseEntity<>(bytes, httpHeaders, HttpStatus.CREATED);
+    }
 }
