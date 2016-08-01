@@ -21,42 +21,71 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * Created by TianJ on 2016/6/15.
+ * Created by TianJ on 2016/7/12.
  */
 @RestController
-@RequestMapping(value = "/api/v2/excel/admission")
-public class admissionController {
+@RequestMapping(value = "/api/v2/excel/expert-review")
+public class expertController {
     @Autowired
     private ExportService exportService;
     /**
-     * 导出新生录取名单
+     * 导出预约专家名单
      * Post
      */
     @RequestMapping(
+            value = "/expert",
             method = RequestMethod.POST,
             headers = "Content-Type=application/x-www-form-urlencoded")
-    public ResponseEntity<byte[]> exportAdmission(@RequestBody String str) throws IOException {
-        String cscIdsStr = java.net.URLDecoder.decode(str, "UTF-8");
-        cscIdsStr = cscIdsStr.substring(7);
-        ArrayList content = new ObjectMapper().readValue(cscIdsStr,ArrayList.class);
-        String[] tableNames = new String[content.size()]; //视图名称
-        String[] titles = new String[content.size()]; //各sheet页标题
-        String[] sheetTitles = new String[content.size()]; //各sheet页名称
-        List<List<String>> idsList = new ArrayList<>(); //各sheet页对应应导出的cscIds
-        String[] Row2Col2s = new String[content.size()]; //各sheet页第二行第二列对应内容
-        for(int i=0;i<content.size();i++){
-            HashMap c = (HashMap) content.get(i);
-            Integer year = Integer.parseInt(c.get("year").toString());
-            Integer nextYear = year+1;
-            String title = year + "~" + nextYear + "学年度" + c.get("dispatch") + "-" + c.get("projectname") + "新生录取名单";
-            titles[i] = title;
-            String sheetTitle = year + "" + c.get("dispatch") + "-" + c.get("projectname");
-            sheetTitles[i] = sheetTitle;
-            tableNames[i] = "asms.v_stu_lqmd";
-            List cscIds = (List)c.get("cscIds");
-            idsList.add(cscIds);
-            String subTitle = c.get("dispatch") + "-" + c.get("projectname");
-            Row2Col2s[i] = subTitle;
+    public ResponseEntity<byte[]> exportExperts(@RequestBody String str) throws IOException {
+        String idsStr = java.net.URLDecoder.decode(str, "UTF-8");
+        idsStr = idsStr.substring(5,idsStr.length()-1);
+        String[] idsTemp = idsStr.split(",");
+        String[] ids = new String[idsTemp.length];
+        for(int i=0;i<idsTemp.length;i++){
+            ids[i] = idsTemp[i].substring(1,idsTemp[i].length()-1);
+        }
+        String tableName = "V_EXP_EXPERT";
+        byte[] bytes = null;
+        //打印设置
+        PrintConfig printConfig = new PrintConfig();
+        printConfig.LANDSCAPE = true; // 打印方向，true：横向，false：纵向
+        printConfig.PAPERSIZE = HSSFPrintSetup.A4_PAPERSIZE;
+        printConfig.SCALE = (short) 90;
+
+        bytes = exportService.exportByFilter(tableName, "0",ids,printConfig);
+        Timestamp ts = new Timestamp(System.currentTimeMillis());
+        String fileName = ts.getTime() + ".xls"; // 组装附件名称和格式
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        httpHeaders.setContentDispositionFormData("attachment", fileName);
+
+        return new ResponseEntity<byte[]>(bytes, httpHeaders, HttpStatus.CREATED);
+    }
+    /**
+     * 导出评审结果汇总
+     * Post
+     */
+    @RequestMapping(
+            value = "/review",
+            method = RequestMethod.POST,
+            headers = "Content-Type=application/x-www-form-urlencoded")
+    public ResponseEntity<byte[]> exportReviewResults(@RequestBody String str) throws IOException {
+        String idsStr = java.net.URLDecoder.decode(str, "UTF-8");
+        idsStr = idsStr.substring(4);
+        HashMap map = new ObjectMapper().readValue(idsStr,HashMap.class);
+        String type = (String)map.get("type");
+        List idslist = (ArrayList)map.get("ids");
+        String[] ids = new String[idslist.size()];
+        for(int i=0;i<idslist.size();i++){
+            ids[i] = (String)idslist.get(i);
+        }
+        String tableName = "";
+        switch (type){
+            case "score":tableName = "V_EXP_REVIEW_SCORE";break;
+            case "conclusion":tableName = "V_EXP_REVIEW_CONCLUSION";break;
+            case "combine":tableName="V_EXP_REVIEW_COMBINE";break;
+            default:tableName = "V_EXP_REVIEW_SCORE";break;
         }
         byte[] bytes = null;
         //打印设置
@@ -65,7 +94,7 @@ public class admissionController {
         printConfig.PAPERSIZE = HSSFPrintSetup.A4_PAPERSIZE;
         printConfig.SCALE = (short) 90;
 
-        bytes = exportService.exportByFilter(tableNames, "0", idsList,titles,sheetTitles,Row2Col2s,printConfig);
+        bytes = exportService.exportByFilter(tableName, "0",ids,printConfig);
         Timestamp ts = new Timestamp(System.currentTimeMillis());
         String fileName = ts.getTime() + ".xls"; // 组装附件名称和格式
 
@@ -76,37 +105,5 @@ public class admissionController {
         return new ResponseEntity<byte[]>(bytes, httpHeaders, HttpStatus.CREATED);
     }
 
-    /**
-     * 导出录取结果统计
-     * Post
-     */
-    @RequestMapping(
-            value = "/results",
-            method = RequestMethod.POST,
-            headers = "Content-Type=application/x-www-form-urlencoded")
-    public ResponseEntity<byte[]> exportAdmissionResults(@RequestBody String str) throws IOException {
-        String namesStr = java.net.URLDecoder.decode(str, "UTF-8");
-        namesStr = namesStr.substring(7,namesStr.length()-1);
-        String[] temp = namesStr.split(",");
-        String[] names = new String[temp.length];
-        for(int i=0;i<temp.length;i++){
-            names[i] = temp[i].substring(1,temp[i].length()-1);
-        }
-        byte[] bytes;
-        //打印设置
-        PrintConfig printConfig = new PrintConfig();
-        printConfig.LANDSCAPE = true; // 打印方向，true：横向，false：纵向
-        printConfig.PAPERSIZE = HSSFPrintSetup.A4_PAPERSIZE;
-        printConfig.SCALE = (short) 90;
 
-        bytes = exportService.exportByFilter("asms.v_exp_admission_result", "0",names,printConfig);
-        Timestamp ts = new Timestamp(System.currentTimeMillis());
-        String fileName = ts.getTime() + ".xls"; // 组装附件名称和格式
-
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        httpHeaders.setContentDispositionFormData("attachment", fileName);
-
-        return new ResponseEntity<>(bytes, httpHeaders, HttpStatus.CREATED);
-    }
 }
