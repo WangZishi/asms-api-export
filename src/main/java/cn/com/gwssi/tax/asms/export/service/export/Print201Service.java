@@ -17,7 +17,7 @@ public class Print201Service {
     public byte[] print201(HashMap application) {
         byte[] bytes = null;
         try {
-            InputStream is = new FileInputStream("./src/main/resources/201Template.xls");
+            InputStream is = this.getClass().getResourceAsStream("/201Template.xls");
             HSSFWorkbook workbook = new HSSFWorkbook(is);
             is.close();
             HSSFSheet sheet = workbook.getSheetAt(0);
