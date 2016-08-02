@@ -41,7 +41,7 @@ class AppConfig {
         if (map.containsKey("NODE_ENV")) {
             String nodeEnv = map.get("NODE_ENV").toString();
             switch (nodeEnv) {
-                case "dev": {
+                case "development": {
                     ds.setUrl(env.getProperty("jdbc.dev.url"));
                     ds.setUsername(env.getProperty("jdbc.dev.username"));
                     ds.setPassword(env.getProperty("jdbc.dev.password"));
@@ -53,7 +53,7 @@ class AppConfig {
                     ds.setPassword(env.getProperty("jdbc.test.password"));
                 }
                 break;
-                case "prod": {
+                case "production": {
                     ds.setUrl(env.getProperty("jdbc.prod.url"));
                     ds.setUsername(env.getProperty("jdbc.prod.username"));
                     ds.setPassword(env.getProperty("jdbc.prod.password"));
