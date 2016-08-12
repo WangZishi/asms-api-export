@@ -32,38 +32,19 @@ class AppConfig {
         BasicDataSource ds = new BasicDataSource();
 
         ds.setDriverClassName(env.getProperty("jdbc.driverClassName"));
-//        ds.setUrl(env.getProperty("jdbc.url"));
-//        ds.setUsername(env.getProperty("jdbc.username"));
-//        ds.setPassword(env.getProperty("jdbc.password"));
-
         // 获取系统环境变量
         Map map = System.getenv();
-        if (map.containsKey("NODE_ENV")) {
-            String nodeEnv = map.get("NODE_ENV").toString();
-            switch (nodeEnv) {
-                case "development": {
-                    ds.setUrl(env.getProperty("jdbc.dev.url"));
-                    ds.setUsername(env.getProperty("jdbc.dev.username"));
-                    ds.setPassword(env.getProperty("jdbc.dev.password"));
-                }
-                break;
-                case "test": {
-                    ds.setUrl(env.getProperty("jdbc.test.url"));
-                    ds.setUsername(env.getProperty("jdbc.test.username"));
-                    ds.setPassword(env.getProperty("jdbc.test.password"));
-                }
-                break;
-                case "production": {
-                    ds.setUrl(env.getProperty("jdbc.prod.url"));
-                    ds.setUsername(env.getProperty("jdbc.prod.username"));
-                    ds.setPassword(env.getProperty("jdbc.prod.password"));
-                }
-                break;
-            }
+        if (map.containsKey("JDBC_URL") && map.containsKey("JDBC_USERNAME") && map.containsKey("JDBC_PASSWORD")) {
+            String jdbcUrl = map.get("JDBC_URL").toString();
+            String jdbcUsername = map.get("JDBC_USERNAME").toString();
+            String jdbcPassword = map.get("JDBC_PASSWORD").toString();
+            ds.setUrl(jdbcUrl);
+            ds.setUsername(jdbcUsername);
+            ds.setPassword(jdbcPassword);
         }else{
-            ds.setUrl(env.getProperty("jdbc.test.url"));
-            ds.setUsername(env.getProperty("jdbc.test.username"));
-            ds.setPassword(env.getProperty("jdbc.test.password"));
+            ds.setUrl(env.getProperty("jdbc.dev.url"));
+            ds.setUsername(env.getProperty("jdbc.dev.username"));
+            ds.setPassword(env.getProperty("jdbc.dev.password"));
         }
         return ds;
     }
